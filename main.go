@@ -38,44 +38,45 @@ func day1Part1() {
 		foundFirstNumber := false
 		foundLastNumber := false
 
+		// handle empty lines and comments
 		if strings.HasPrefix(line, "#") || line == "" {
 			continue
 		}
 
 		// use two pointers to traverse the line. one that start from the fron and
-		// one that starts from The back. they can overlap and one can finish
-		// befeore the other.
+		// one that starts from the back. they can overlap and one can finish
+		// before the other.
 		for (start < len(line) && end >= 0) && (!foundFirstNumber || !foundLastNumber) {
-			// if the pointers overlap and we havent't found the lhe last number, we
+
+			// optimization - if the pointers overlap and we havent't found the lhe last number, we
 			// can r{jeuse the first one we've found in order to not recheck parts
 			// we've already checked. slight optimization
 			if start >= end && foundFirstNumber && !foundLastNumber {
-				// log.Printf("for line %s, deducing the last number using the first since the pointer overlap", line)
 				digits[1] = digits[0]
 				foundLastNumber = true
 				break
 			}
 
+			// handle finding the first number
 			if !foundFirstNumber && start < len(line) {
 				c := rune(line[start])
 				if isNumeric(c) {
 					digits[0] = c
-					// hal{bt interator of this pointer
+					// halt interator of this pointer
 					foundFirstNumber = true
-					//log.Printf("found first number: val - %c, head - %d, tail - %d, len - %d", c, start, end, len(line))
 				} else {
 					// next
 					start += 1
 				}
 			}
 
+			// handle finding the last number
 			if !foundLastNumber && end > 0 {
 				c := rune(line[end])
 				if isNumeric(c) {
 					digits[1] = c
 					// halt interator of this pointer
 					foundLastNumber = true
-					//log.Printf("found last number: val - %c, head - %d, tail - %d, len - %d", c, start, end, len(line))
 				} else {
 					// previous
 					end -= 1
@@ -92,7 +93,6 @@ func day1Part1() {
 
 		sumOfCalibrationValues += valueNum
 		lineCount += 1
-		//log.Printf("'%s'--> %s", line, value)
 	}
 
 	if err = scanner.Err(); err != nil {
@@ -138,18 +138,17 @@ func day1Part2() {
 		start := 0
 		end := 0
 
-		// log.Printf("line: %s", line)
-
 		// handle comments and empty lines
 		if strings.HasPrefix(line, "#") || line == "" {
 			continue
 		}
 
+		// use sliding window to compute subsequences that could make a word. we
+		// use two pointers here and they both start from the front.
 		for end < len(line) {
 			c := rune(line[end])
 			if isNumeric(c) {
-				// log.Printf("found number: val - %c, head - %d, tail - %d", c, start, end)
-
+				// attempt to persist the first digit
 				if digits[0] == 0 {
 					digits[0] = c
 				}
@@ -161,31 +160,22 @@ func day1Part2() {
 				// ensure we are still building towards a valid word
 				for {
 					_, isSubsequence := wordsToNumber.SubTrie([]byte(line[start:end+1]), true)
-					if isSubsequence {
-						// log.Printf("is subsequence: %s (start - %d, end - %d, line - %s)", line[start:end+1], start, end, line)
-						break
-					}
-
-					if start >= end {
+					if isSubsequence || start >= end{
 						break
 					}
 
 					start += 1
 				}
 
-				//
-				if num, prefixLen, ok := wordsToNumber.SearchPrefixInString(line[start:end+1]); ok {
-					if prefixLen == len(line[start:end+1]) {
-						// log.Printf("[start trail] match word %s to nubmer %c for line %s", line[start:end+1], num, line)
-
-						if digits[0] == 0 {
-							digits[0] = num
-						}
-
-						// always overwrite the last digit
-						digits[1] = num
-						start = end
+				// handle match a word
+				if num, prefixLen, ok := wordsToNumber.SearchPrefixInString(line[start:end+1]); ok && prefixLen == len(line[start:end+1]) {
+					if digits[0] == 0 {
+						digits[0] = num
 					}
+
+					// always overwrite the last digit
+					digits[1] = num
+					start = end
 				}
 			}
 
@@ -202,7 +192,6 @@ func day1Part2() {
 
 		sumOfCalibrationValues += valueNum
 		lineCount += 1
-		// log.Printf("'%s'--> %s", line, value)
 	}
 
 	if err = scanner.Err(); err != nil {
