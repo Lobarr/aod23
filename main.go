@@ -16,6 +16,15 @@ func isNumeric(char rune) bool {
 	return n >= 48 && n <= 57
 }
 
+// instruments a routine
+func instrument(ctx string, f func()) {
+	t := time.Now()
+	f()
+	d := time.Now().Sub(t)
+	log.Printf(
+		"[%s] took %d ms (%d ns) to execute", ctx, d.Milliseconds(), d.Nanoseconds())
+}
+
 // helper function for traversing a file line by line. line processors accept a variable used
 // to maintain global state and the line to process.
 func traverseFile[T any](inputFile string, ctx *T, processLine func(*T, string)) {
@@ -119,10 +128,10 @@ func day1Part1() {
 }
 
 func day1Part2() {
-	type state struct{
+	type state struct {
 		sumOfCalibrationValues int
-		lineCount int
-		wordsToNumber *trie.Trie[rune]
+		lineCount              int
+		wordsToNumber          *trie.Trie[rune]
 	}
 
 	inputFile := "./day1-input.txt"
@@ -139,7 +148,7 @@ func day1Part2() {
 			"nine":  '9',
 		}),
 	}
-	
+
 	traverseFile(inputFile, ctx, func(s *state, line string) {
 		digits := [2]rune{}
 		start := 0
@@ -168,9 +177,9 @@ func day1Part2() {
 
 					start += 1
 				}
-
-				// handle match a word
-				if num, prefixLen, ok := s.wordsToNumber.SearchPrefixInString(line[start : end+1]); ok && prefixLen == len(line[start:end+1]) {
+				// handle word
+				num, prefixLen, ok := s.wordsToNumber.SearchPrefixInString(line[start : end+1])
+				if ok && prefixLen == len(line[start:end+1]) {
 					if digits[0] == 0 {
 						digits[0] = num
 					}
@@ -199,25 +208,131 @@ func day1Part2() {
 	log.Printf("[part 2] answer = %d", ctx.sumOfCalibrationValues)
 }
 
+func day1(dashes string) {
+	log.Printf("%sDay 1%s", dashes, dashes)
+	instrument("part 1", day1Part1)
+	instrument("part 2", day1Part2)
+}
+
+func day2Part1() {
+	type state struct {
+		gamesSum int
+	}
+
+	inputFile := "./day2-input.txt"
+	ctx := &state{}
+
+	traverseFile(inputFile, ctx, func(s *state, line string) {
+		const maxNumRed = 12
+		const maxNumGreen = 13
+		const maxNumBlue = 14
+
+		seperator := strings.Index(line, ": ")
+		if seperator == -1 {
+			log.Fatal("unable to fine seperator ':'")
+		}
+
+		gameStr := strings.TrimPrefix(line[:seperator], "Game ")
+		game, err := strconv.Atoi(gameStr)
+		if err != nil {
+			log.Fatalf("unable to convert '%s' to number on line \"%s\"", gameStr, line)
+		}
+
+		parts := strings.Split(line[seperator+2:], "; ")
+
+		isColorValid := func(color string, suffix string, max int) bool {
+			if strings.HasSuffix(color, suffix) {
+				numStr := strings.TrimSuffix(color, suffix)
+				num, err := strconv.Atoi(numStr)
+				if err != nil {
+					log.Fatalf("unable to convert '%s' to number on color \"%s\"", numStr, color)
+				}
+
+				if num > max {
+					return false
+				}
+				return true
+			}
+			return true
+		}
+
+		valid := true
+		for _, part := range parts {
+			colors := strings.Split(part, ", ")
+
+			for _, color := range colors {
+				if !isColorValid(color, " red", maxNumRed) ||
+					!isColorValid(color, " green", maxNumGreen) ||
+					!isColorValid(color, " blue", maxNumBlue) {
+					valid = false
+				}
+			}
+		}
+
+		if valid {
+			s.gamesSum += game
+		}
+	})
+
+	log.Printf("[part 1] answer = %d", ctx.gamesSum)
+}
+
+func day2Part2() {
+	type state struct {
+		gamesSum int
+	}
+
+	inputFile := "./day2-input.txt"
+	ctx := &state{}
+
+	traverseFile(inputFile, ctx, func(s *state, line string) {
+		seperator := strings.Index(line, ": ")
+		if seperator == -1 {
+			log.Fatal("unable to fine seperator ':'")
+		}
+
+		parts := strings.Split(line[seperator+2:], "; ")
+
+		handleColor := func(color string, suffix string, rbg *[3]int, i int) {
+			if strings.HasSuffix(color, suffix) {
+				numStr := strings.TrimSuffix(color, suffix)
+				num, err := strconv.Atoi(numStr)
+				if err != nil {
+					log.Fatalf("unable to convert '%s' to number on color \"%s\"", numStr, color)
+				}
+
+				if num > rbg[i] {
+					rbg[i] = num
+				}
+			}
+		}
+
+		maxRGB := [3]int{}
+		for _, part := range parts {
+			colors := strings.Split(part, ", ")
+
+			for _, color := range colors {
+				handleColor(color, " red", &maxRGB, 0)
+				handleColor(color, " green", &maxRGB, 1)
+				handleColor(color, " blue", &maxRGB, 2)
+			}
+		}
+
+		s.gamesSum += maxRGB[0] * maxRGB[1] * maxRGB[2]
+	})
+
+	log.Printf("[part 2] answer = %d", ctx.gamesSum)
+}
+
+func day2(dashes string) {
+	log.Printf("%sDay 2%s", dashes, dashes)
+	instrument("part 1", day2Part1)
+	instrument("part 2", day2Part2)
+}
+
 func main() {
 	dashes := strings.Repeat("-", 20)
 	log.Println("Advent of Code 2023!")
-
-	// Day 1
-	log.Printf("%sDay 1%s", dashes, dashes)
-
-	// Day 1 Part 1
-	day1Part1T := time.Now()
-	day1Part1()
-	day1Part1D := time.Now().Sub(day1Part1T)
-	log.Printf(
-		"[part 1] took %d ms (%d ns) to execute", day1Part1D.Milliseconds(), day1Part1D.Nanoseconds())
-
-	// Day 1 Part 2
-	day1Part2T := time.Now()
-	day1Part2()
-	day1Part2D := time.Now().Sub(day1Part2T)
-	log.Printf(
-		"[part 2] took %d ms (%d ns) to execute", day1Part2D.Milliseconds(), day1Part2D.Nanoseconds())
-
+	day1(dashes)
+	day2(dashes)
 }
