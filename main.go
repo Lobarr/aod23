@@ -103,7 +103,7 @@ func day1Part1() {
 		log.Fatalf("unable to close file %s", f.Name())
 	}
 
-	log.Printf("[part 1] the sum of %d calibration values is %d", lineCount, sumOfCalibrationValues)
+	log.Printf("[part 1] answer = %d", sumOfCalibrationValues)
 }
 
 func day1Part2() {
@@ -135,59 +135,62 @@ func day1Part2() {
 	for scanner.Scan() {
 		digits := [2]rune{}
 		line := scanner.Text()
-		i := 0
-		// stores the context of letter we've seen on our path
-		var trail strings.Builder
+		start := 0
+		end := 0
+
+		// log.Printf("line: %s", line)
 
 		// handle comments and empty lines
 		if strings.HasPrefix(line, "#") || line == "" {
 			continue
 		}
 
-		for i < len(line) {
-			c := rune(line[i])
+		for end < len(line) {
+			c := rune(line[end])
 			if isNumeric(c) {
+				// log.Printf("found number: val - %c, head - %d, tail - %d", c, start, end)
+
 				if digits[0] == 0 {
 					digits[0] = c
-				} 
+				}
 
 				// always overwrite the last digit
 				digits[1] = c
-				// log.Printf("found first number: val - %c, head - %d, tail - %d, len - %d", c, start, end, len(line))
+				start += 1
 			} else {
-				// build context as we iterate and use that to determine if we've
-				// encountered a word that's a number
-				trail.WriteRune(c)
-				trailStr := trail.String()
+				// ensure we are still building towards a valid word
+				for {
+					_, isSubsequence := wordsToNumber.SubTrie([]byte(line[start:end+1]), true)
+					if isSubsequence {
+						// log.Printf("is subsequence: %s (start - %d, end - %d, line - %s)", line[start:end+1], start, end, line)
+						break
+					}
 
-				// check if we are still building towards a valid word
-				if _, isSubsequence := wordsToNumber.SubTrie([]byte(trailStr), true); !isSubsequence {
-					trail.Reset()	
-				}	
+					if start >= end {
+						break
+					}
 
-				// 
-				if num, prefixLen, ok := wordsToNumber.SearchPrefixInString(trailStr); ok {
-					if prefixLen == len(trailStr) {
-						// log.Printf("[start trail] match word %s to nubmer %c for line %s", trailStr, num, line)
+					start += 1
+				}
+
+				//
+				if num, prefixLen, ok := wordsToNumber.SearchPrefixInString(line[start:end+1]); ok {
+					if prefixLen == len(line[start:end+1]) {
+						// log.Printf("[start trail] match word %s to nubmer %c for line %s", line[start:end+1], num, line)
+
 						if digits[0] == 0 {
 							digits[0] = num
 						}
 
 						// always overwrite the last digit
 						digits[1] = num
-						trail.Reset()
+						start = end
 					}
-				}
-
-				// if the current character matches a subsequence, we start building
-				// from that character instead of discarding it entirely
-				if _, isSubsequence := wordsToNumber.SubTrie([]byte{byte(c)}, true); isSubsequence {
-					trail.WriteRune(c)
 				}
 			}
 
 			// next
-			i += 1
+			end += 1
 		}
 
 		value := string(digits[:])
@@ -199,7 +202,7 @@ func day1Part2() {
 
 		sumOfCalibrationValues += valueNum
 		lineCount += 1
-		log.Printf("'%s'--> %s", line, value)
+		// log.Printf("'%s'--> %s", line, value)
 	}
 
 	if err = scanner.Err(); err != nil {
@@ -210,24 +213,28 @@ func day1Part2() {
 		log.Fatalf("unable to close file %s", f.Name())
 	}
 
-	log.Printf("[part 2] the sum of %d calibration values is %d", lineCount, sumOfCalibrationValues)
+	log.Printf("[part 2] answer = %d", sumOfCalibrationValues)
 }
 
 func main() {
+	dashes := strings.Repeat("-", 20)
 	log.Println("Advent of Code 2023!")
+
+	// Day 1
+	log.Printf("%sDay 1%s", dashes, dashes)
 
 	// Day 1 Part 1
 	day1Part1T := time.Now()
 	day1Part1()
 	day1Part1D := time.Now().Sub(day1Part1T)
 	log.Printf(
-		"Day 1 part 1 took %d ms (%d ns) to execute", day1Part1D.Milliseconds(), day1Part1D.Nanoseconds())
+		"[part 1] took %d ms (%d ns) to execute", day1Part1D.Milliseconds(), day1Part1D.Nanoseconds())
 
 	// Day 1 Part 2
 	day1Part2T := time.Now()
 	day1Part2()
 	day1Part2D := time.Now().Sub(day1Part2T)
 	log.Printf(
-		"Day 1 part 2 took %d ms (%d ns) to execute", day1Part2D.Milliseconds(), day1Part2D.Nanoseconds())
+		"[part 2] took %d ms (%d ns) to execute", day1Part2D.Milliseconds(), day1Part2D.Nanoseconds())
 
 }
