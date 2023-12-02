@@ -16,17 +16,6 @@ func isNumeric(char rune) bool {
 	return n >= 48 && n <= 57
 }
 
-// reverses a string
-func reverse(input string) string {
-	var output strings.Builder
-	i := len(input) - 1
-	for i >= 0 {
-		output.WriteByte(input[i])
-		i -= 1
-	}
-	return output.String()
-}
-
 func day1Part1() {
 	inputFile := "./day1-input.txt"
 
