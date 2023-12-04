@@ -348,7 +348,7 @@ func day3Part1() {
 		start := -1
 		end := -1
 		
-		// prerocess line to gather all contxt needed for evaluation
+		// preprocess line to gather all contxt needed for evaluation
 		for i, c := range line {
 			if isNumeric(c) {
 				// handle number window
