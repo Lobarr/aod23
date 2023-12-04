@@ -348,7 +348,7 @@ func day3Part1() {
 		start := -1
 		end := -1
 		
-		// preprocess line to gather all contxt needed for evaluation
+		// preprocess line to gather all context needed for evaluation
 		for i, c := range line {
 			if isNumeric(c) {
 				// handle number window
@@ -373,15 +373,8 @@ func day3Part1() {
 			}
 		}
 
-		seenLines := map[string]bool{}
-
 		handleNumbersWithAdjacentWindows := func(windows [][2]int, symbolIndexes []int, l string) {
 			if l != "" {
-				if _, seen := seenLines[line]; !seen {
-					log.Println(line)
-					seenLines[line] = true
-				}
-
 				for _, window := range windows {
 					prev := window[0] - 1
 					next := window[1] + 1
@@ -399,7 +392,6 @@ func day3Part1() {
 						if prev <= symbolIndex && symbolIndex <= next {
 							numStr := l[window[0] : window[1]+1]
 
-							log.Printf("found symbol adjacent to number %s",numStr)
 
 							num, err := strconv.Atoi(numStr)
 							if err != nil {
@@ -407,6 +399,7 @@ func day3Part1() {
 							}
 
 							ctx.answer += num
+							log.Printf("adding %s to answer, answer = %d",numStr, ctx.answer)
 						}
 					}
 				}
@@ -416,12 +409,13 @@ func day3Part1() {
 		// compare the symbols in the current line with the number of the
 		// current line
 		handleNumbersWithAdjacentWindows(numberWindows, symbols, line)
-		// compare the nubmers of the previous line with the symbols in
-		// the current line
-		handleNumbersWithAdjacentWindows(ctx.prevNumberWindows, symbols, ctx.prevLine)
 		// compare the symbols in the previous line with the numbers of the current
 		// line
 		handleNumbersWithAdjacentWindows(numberWindows, ctx.prevSymbols, line)
+		// compare the nubmers of the previous line with the symbols in
+		// the current line
+	  handleNumbersWithAdjacentWindows(ctx.prevNumberWindows, symbols, ctx.prevLine)
+
 
 		ctx.prevLine = line
 		ctx.prevSymbols = symbols
