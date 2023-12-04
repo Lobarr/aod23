@@ -77,7 +77,7 @@ func day1Part1() {
 		for (start < len(line) && end >= 0) && (!foundFirstNumber || !foundLastNumber) {
 
 			// optimization - if the pointers overlap and we havent't found the lhe last number, we
-			// can r{jeuse the first one we've found in order to not recheck parts
+			// can reuse the first one we've found in order to not recheck parts
 			// we've already checked. slight optimization
 			if start >= end && foundFirstNumber && !foundLastNumber {
 				digits[1] = digits[0]
