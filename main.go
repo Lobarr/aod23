@@ -416,10 +416,10 @@ func day3Part1() {
 		// compare the symbols in the current line with the number of the
 		// current line
 		handleNumbersWithAdjacentWindows(numberWindows, symbols, line)
-		// compare the nubmers in the previous line with the current symbols in
+		// compare the nubmers of the previous line with the symbols in
 		// the current line
 		handleNumbersWithAdjacentWindows(ctx.prevNumberWindows, symbols, ctx.prevLine)
-		// compare the symbols in the previous line with the numbers in the current
+		// compare the symbols in the previous line with the numbers of the current
 		// line
 		handleNumbersWithAdjacentWindows(numberWindows, ctx.prevSymbols, line)
 
