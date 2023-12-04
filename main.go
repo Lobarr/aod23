@@ -330,9 +330,117 @@ func day2(dashes string) {
 	instrument("part 2", day2Part2)
 }
 
+func day3Part1() {
+	type state struct {
+		answer            int
+		prevLine          string
+		prevNumberWindows [][2]int
+		prevSymbols       []int
+	}
+
+	// inputFile := "./day3-testinput.txt"
+	inputFile := "./day3-input.txt"
+	ctx := &state{}
+
+	traverseFile(inputFile, ctx, func(s *state, line string) {
+		numberWindows := [][2]int{}
+		symbols := []int{}
+		start := -1
+		end := -1
+		
+		// prerocess line to gather all contxt needed for evaluation
+		for i, c := range line {
+			if isNumeric(c) {
+				// handle number window
+				if start == -1 {
+					start = i
+					end = i
+				} else {
+					end = i
+				}
+			} else {
+				// handle end of number window
+				if start != -1 && end != -1 {
+					numberWindows = append(numberWindows, [2]int{start, end})
+					start = -1
+					end = -1
+				}
+
+				// store symbols
+				if c != '.' {
+					symbols = append(symbols, i)
+				}
+			}
+		}
+
+		seenLines := map[string]bool{}
+
+		handleNumbersWithAdjacentWindows := func(windows [][2]int, symbolIndexes []int, l string) {
+			if l != "" {
+				if _, seen := seenLines[line]; !seen {
+					log.Println(line)
+					seenLines[line] = true
+				}
+
+				for _, window := range windows {
+					prev := window[0] - 1
+					next := window[1] + 1
+
+					if prev < 0 {
+						prev = 0
+					}
+
+					if next >= len(line) {
+						next = len(line) - 1
+					}
+
+					for _, symbolIndex := range symbolIndexes {
+						// found symbol adjacent to a number window
+						if prev <= symbolIndex && symbolIndex <= next {
+							numStr := l[window[0] : window[1]+1]
+
+							log.Printf("found symbol adjacent to number %s",numStr)
+
+							num, err := strconv.Atoi(numStr)
+							if err != nil {
+								log.Fatalf("unable to convert '%s' to number on line \"%s\"", numStr, l)
+							}
+
+							ctx.answer += num
+						}
+					}
+				}
+			}
+		}
+
+		// compare the symbols in the current line with the number of the
+		// current line
+		handleNumbersWithAdjacentWindows(numberWindows, symbols, line)
+		// compare the nubmers in the previous line with the current symbols in
+		// the current line
+		handleNumbersWithAdjacentWindows(ctx.prevNumberWindows, symbols, ctx.prevLine)
+		// compare the symbols in the previous line with the numbers in the current
+		// line
+		handleNumbersWithAdjacentWindows(numberWindows, ctx.prevSymbols, line)
+
+		ctx.prevLine = line
+		ctx.prevSymbols = symbols
+		ctx.prevNumberWindows = numberWindows
+	})
+
+	log.Printf("[part 1] answer = %d", ctx.answer)
+}
+
+func day3(dashes string) {
+	log.Printf("%sDay 1%s", dashes, dashes)
+	instrument("part 1", day3Part1)
+	// instrument("part 2", day3Part2)
+}
+
 func main() {
 	dashes := strings.Repeat("-", 20)
 	log.Println("Advent of Code 2023!")
 	day1(dashes)
 	day2(dashes)
+	day3(dashes)
 }
